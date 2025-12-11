@@ -1,0 +1,55 @@
+# 2.1. Navegue até o diretório do BACKEND e construa a imagem
+cd /caminho/para/seu/backend # Substitua pelo caminho real
+docker build -t backend-cors .
+
+# 2.2. Navegue até o diretório do FRONTEND e construa a imagem
+cd /caminho/para/seu/frontend # Substitua pelo caminho real
+docker build -t meuchat-frontend .
+
+
+# 3.1. Crie a rede Docker para comunicação entre os contêineres
+docker network create minha-rede-meuchat
+
+
+
+# 4.1. Execute o contêiner do BACKEND na rede criada
+docker run -d \
+  --name meu-chat-backend \
+  --network minha-rede-meuchat \
+  -p 3001:3001 \
+  backend-cors
+
+# 4.2. Execute o contêiner do FRONTEND na mesma rede, usando o .env
+docker run -d \
+  --name meu-chat-app \
+  --network minha-rede-meuchat \
+  --env-file .env.local \
+  -p 3000:80 \
+  meuchat-frontend # Use o nome da imagem correta aqui
+
+
+
+ # 1.1. Parar e remover TODOS os contêineres (rodando ou parados)
+docker rm -f $(docker ps -aq)
+
+# 1.2. Remover TODAS as imagens (isso inclui imagens base como node:alpine, nginx:alpine, que precisarão ser baixadas novamente)
+docker rmi $(docker images -q)
+
+# 1.3. Remover a rede específica (se ainda existir e estiver vazia)
+# (Pode falhar se já foi removida ou se não existir, o que é normal)
+docker network rm minha-rede-meuchat 2>/dev/null || true
+
+# 1.4. Limpar sistema (opcional, mas garante limpeza profunda)
+docker system prune -a --volumes
+# Confirmação será solicitada.
+
+
+# 5.1. Verifique se ambos os contêineres estão rodando
+docker ps
+
+# 5.2. Verifique os logs do frontend para possíveis erros de proxy
+docker logs meu-chat-app
+
+# 5.3. Verifique os logs do backend
+docker logs meu-chat-backend
+
